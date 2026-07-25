@@ -71,7 +71,7 @@ pub const Conn = struct {
             return errorFromCode(rc);
         }
 
-        if (@import("builtin").mode == .Debug) {
+        if (@import("builtin").mode == .debug) {
             if (pz_tail[0] != 0) {
                 // SQlite just returns a pointer to the string we passed in,
                 // which may not be null terminated, so compute the
@@ -164,15 +164,15 @@ pub const Stmt = struct {
         switch (@typeInfo(T)) {
             .@"struct" => |struct_type_info| {
                 if (struct_type_info.is_tuple) {
-                    inline for (struct_type_info.fields, 1..) |field, field_i| {
-                        const field_value = @field(values, field.name);
-                        try _bind(field.type, stmt, field_value, field_i);
+                    inline for (struct_type_info.field_names, struct_type_info.field_types, 1..) |field_name, field_type, field_i| {
+                        const field_value = @field(values, field_name);
+                        try _bind(field_type, stmt, field_value, field_i);
                     }
-                } else inline for (struct_type_info.fields) |field| {
-                    const field_value = @field(values, field.name);
-                    const index = _bindParameterIndex(self.stmt, field.name);
+                } else inline for (struct_type_info.field_names, struct_type_info.field_types) |field_name, field_type| {
+                    const field_value = @field(values, field_name);
+                    const index = _bindParameterIndex(self.stmt, field_name);
                     if (index > 0) {
-                        try _bind(field.type, stmt, field_value, index);
+                        try _bind(field_type, stmt, field_value, index);
                     }
                     // else ignore unused struct fields
                 }
